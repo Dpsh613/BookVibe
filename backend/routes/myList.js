@@ -1,7 +1,7 @@
 // routes/myList.js
 const express = require("express");
 const router = express.Router();
-const Book = require("../models/Book");
+const Book = require("../models/UserBook");
 
 // --- Middleware to check authentication --- (Simple version)
 const isAuthenticated = (req, res, next) => {
@@ -49,20 +49,18 @@ router.post("/", async (req, res) => {
 
     const savedBook = await newBook.save();
     console.log(
-      `(Route) Book added to list for user ${req.session.username}: ${savedBook.title}`
+      `(Route) Book added to list for user ${req.session.username}: ${savedBook.title}`,
     );
     res.status(201).json(savedBook);
   } catch (error) {
     // Handle compound unique index error (user already added this book)
     if (error.code === 11000) {
       console.warn(
-        `(Route) User ${req.session.username} attempted to add duplicate book ID: ${req.body.id}`
+        `(Route) User ${req.session.username} attempted to add duplicate book ID: ${req.body.id}`,
       );
-      return res
-        .status(409)
-        .json({
-          message: `Book with ID ${req.body.id} is already in your list.`,
-        });
+      return res.status(409).json({
+        message: `Book with ID ${req.body.id} is already in your list.`,
+      });
     }
     console.error("(Route) Error adding book to user's list:", error);
     res.status(500).json({ message: "Failed to add book." });
@@ -91,7 +89,7 @@ router.delete("/:bookId", async (req, res) => {
     }
 
     console.log(
-      `(Route) Book removed from list for user ${req.session.username}, ID: ${bookId}`
+      `(Route) Book removed from list for user ${req.session.username}, ID: ${bookId}`,
     );
     res.status(200).json({ message: `Book removed successfully.` });
   } catch (error) {
