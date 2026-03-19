@@ -5,8 +5,5 @@ export default {
     "./index.html", // Include the main HTML file
     "./src/**/*.{js,ts,jsx,tsx}", // Include all JS/JSX files in src
   ],
-  theme: {
-    extend: {},
-  },
   plugins: [],
 };
