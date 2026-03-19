@@ -235,6 +235,14 @@ export default function App() {
                     className={`flex-shrink-0 w-80 p-8 rounded-2xl border ${currentTheme.border} bg-black/5 dark:bg-white/5 backdrop-blur-sm shadow-xl transition-all duration-500 snap-center flex flex-col justify-between`}
                   >
                     <div>
+                      <h3 className="text-2xl literary-text mb-2 text-balance leading-tight">
+                        {book.title}
+                      </h3>
+                      <p className="text-xs uppercase tracking-widest opacity-60 mb-6">
+                        {book.author}
+                      </p>
+
+                      {/* Real Book Cover! */}
                       {book.coverImage ? (
                         <img
                           src={book.coverImage}
@@ -246,14 +254,6 @@ export default function App() {
                           <span className="opacity-40 text-xs">No Cover</span>
                         </div>
                       )}
-                      <h3 className="text-2xl literary-text mb-2 text-balance leading-tight">
-                        {book.title}
-                      </h3>
-                      <p className="text-xs uppercase tracking-widest opacity-60 mb-6">
-                        {book.author}
-                      </p>
-
-                      {/* Real Book Cover! */}
 
                       <p className="text-xs leading-relaxed opacity-70 mb-8 line-clamp-3">
                         Subjects: {book.subjects.slice(0, 3).join(", ")}

@@ -1,1 +1,17 @@
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Inter:wght@300;400;500&display=swap");
+
 @import "tailwindcss";
+
+@layer base {
+  body {
+    /* Smooth background color transitions globally */
+    @apply transition-colors duration-1000 ease-in-out font-sans antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  .literary-text {
+    font-family: "Playfair Display", serif;
+  }
+}
