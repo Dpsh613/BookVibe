@@ -39,7 +39,7 @@ const librarySchema = new mongoose.Schema({
     type: Date,
     default: Date.now,
   },
-  lasReadAt: {
+  lastReadAt: {
     type: Date,
     default: Date.now,
   },

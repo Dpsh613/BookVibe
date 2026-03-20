@@ -1,18 +1,20 @@
 // This is the "brain" of BookVibe. Gutendex doesn't know what "Dark" or "Victorian" means. We have to map your app's concepts to Gutendex's topic and author lifespan parameters.
 
 const moodToTopic = {
-  reflective: ["philosophy", "psychology", "poetry"],
-  nostalgic: ["childhood", "fairy tales", "humor"],
-  dark: ["gothic", "horror", "mystery", "detective"],
-  romantic: ["romance", "love"],
-  escapist: ["adventure", "science", "fantasy"],
-  // we can search all the genres gutendex has and then distribute them among the moods
+  reflective: ["philosophy", "psychology", "poetry", "essays", "didactic"],
+  nostalgic: ["childhood", "fairy tales", "humor", "folklore", "historical fiction"],
+  dark: ["gothic", "horror", "detective", "mystery", "crime", "ghost stories"],
+  romantic: ["romance", "love stories", "man-woman relationships"],
+  escapist: ["adventure", "science fiction", "fantasy", "mythology", "sea stories"],
 };
 
 const eraToYears = {
-  victorian: { start: 1800, end: 1901 },
-  roaring: { start: 1880, end: 1930 },
-  ancient: { start: -2000, end: 500 }, // BCE to early AD
+  // Homer and Plato, Shakespeare, Dante and early philosophers
+  victorian: { start: 1900, end: 1950 },
+  // The absolute golden age of the classic novel (Austen, Dickens, Dostoevsky, Poe)
+  roaring: { start: 1800, end: 1899 },
+  //  Captures the Roaring 20s, early modernism, pulp fiction, and the Lost Generation
+  ancient: { start: -3000, end: 1799 }, // BCE to early AD
 };
 
 export { moodToTopic, eraToYears };
