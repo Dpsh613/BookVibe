@@ -81,4 +81,31 @@ const discoverBooks = async (req, res) => {
   }
 };
 
-export { discoverBooks };
+const proxyEpub = async (req, res) => {
+  try {
+    const targetUrl = req.query.url;
+
+    if (!targetUrl) {
+      return res.status(400).json({ message: "No URL provided" });
+    }
+
+    console.log(`🔄 Proxying EPUB from: ${targetUrl}`);
+
+    // Fetch the file as a stream from Gutenberg
+    const response = await axios.get(targetUrl, {
+      responseType: "stream",
+    });
+
+    // Set the headers so your React app knows it's an EPUB and allows CORS
+    res.setHeader("Content-Type", "application/epub+zip");
+    res.setHeader("Access-Control-Allow-Origin", "*");
+
+    // Pipe the data directly to the frontend
+    response.data.pipe(res);
+  } catch (error) {
+    console.error("Proxy error:", error.message);
+    res.status(500).json({ message: "Failed to fetch EPUB" });
+  }
+};
+
+export { discoverBooks, proxyEpub };
