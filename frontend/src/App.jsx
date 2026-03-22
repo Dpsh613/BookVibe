@@ -1,94 +1,9 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { ReactReader, ReactReaderStyle } from "react-reader";
+// import { ReactReader, ReactReaderStyle } from "react-reader";
 
-// --- CONFIGURATION ---
-const MOODS =[
-  {
-    id: "reflective",
-    label: "Reflective",
-    bg: "bg-slate-900",
-    text: "text-slate-200",
-    border: "border-slate-700",
-    prompt: "I want to think deeply.",
-    hexBg: "#0f172a",
-    tocBg: "#1e293b",
-    epubText: "#e2e8f0",
-    scrollbarThumb: "#334155", 
-    scrollbarTrack: "#0f172a", 
-  },
-  {
-    id: "nostalgic",
-    label: "Nostalgic",
-    bg: "bg-[#f4ecd8]",
-    text: "text-amber-950",
-    border: "border-amber-200",
-    prompt: "I want something comforting.",
-    hexBg: "#f4ecd8",
-    tocBg: "#eaddc5",
-    epubText: "#431407",
-    scrollbarThumb: "#dcbda5",
-    scrollbarTrack: "#f4ecd8",
-  },
-  {
-    // THEME UPDATE: Deep, Gloomy, Vampiric Red.
-    id: "dark",
-    label: "Dark",
-    bg: "bg-[#1a0b0c]",
-    text: "text-[#fecaca]",
-    border: "border-[#3f1619]",
-    prompt: "I want tension and mystery.",
-    hexBg: "#1a0b0c",     // Deep gloomy burgundy almost black
-    tocBg: "#2d1417",     // Lighter maroon for the drawer
-    epubText: "#fecaca",  // Pale red/pink text for readability
-    scrollbarThumb: "#7f1d1d", // Deep blood red scrollbar
-    scrollbarTrack: "#1a0b0c", 
-  },
-  {
-    id: "romantic",
-    label: "Romantic",
-    bg: "bg-rose-50",
-    text: "text-rose-950",
-    border: "border-rose-200",
-    prompt: "I want to feel dreamy.",
-    hexBg: "#fff1f2",
-    tocBg: "#ffe4e6",
-    epubText: "#4c0519",
-    scrollbarThumb: "#fecdd3",
-    scrollbarTrack: "#fff1f2",
-  },
-  {
-    id: "escapist",
-    label: "Escapist",
-    bg: "bg-teal-950",
-    text: "text-teal-100",
-    border: "border-teal-800",
-    prompt: "Take me far away.",
-    hexBg: "#042f2e",
-    tocBg: "#115e59",
-    epubText: "#ccfbf1",
-    scrollbarThumb: "#134e4a", 
-    scrollbarTrack: "#042f2e", 
-  },
-];
-
-const ERAS =[
-  {
-    id: "victorian",
-    label: "19th Century",
-    desc: "Gaslight, grand estates, and classical prose.",
-  },
-  {
-    id: "roaring",
-    label: "Early 20th Century",
-    desc: "Modernism, societal shifts, and jazz age.",
-  },
-  {
-    id: "ancient",
-    label: "Antiquity",
-    desc: "Myths, early philosophy, and epics.",
-  },
-];
+import {MOODS, ERAS} from "./utils/constants"
+import ReadingRoom from "./components/ReadingRoom"
 
 export default function App() {
   const[step, setStep] = useState(0);
@@ -122,9 +37,7 @@ export default function App() {
     if (displayStep === 4 && activeBook && !bookData) {
       setIsBookLoading(true);
 
-      const proxyUrl = `http://localhost:5000/api/books/proxy?url=${encodeURIComponent(
-        activeBook.readLink
-      )}`;
+      const proxyUrl =`${import.meta.env.VITE_API_URL}/api/books/proxy?url=${encodeURIComponent(activeBook.readLink)}`;
 
       axios
         .get(proxyUrl, { responseType: "arraybuffer" })
@@ -145,9 +58,7 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const response = await axios.get(
-        `http://localhost:5000/api/books/discover?mood=${mood}&era=${selectedEra}`
-      );
+      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/books/discover?mood=${mood}&era=${selectedEra}`);
 
       setTimeout(() => {
         setBooks(response.data.results);
@@ -335,122 +246,20 @@ export default function App() {
         </>
       )}
 
-      {/* STEP 4: PERFECTION */}
       {displayStep === 4 && activeBook && (
-        <div 
-          className="fixed inset-0 z-50 flex flex-col animate-in fade-in duration-1000 font-sans" 
-          style={{ backgroundColor: currentTheme.hexBg }}
-        >
-          {/* CUSTOM NAVBAR HEADER - Increased Padding Here (px-10 md:px-16 py-8 md:py-10) */}
-          <div className="flex justify-between items-center px-10 md:px-16 py-8 md:py-10 border-b" style={{ borderColor: currentTheme.tocBg }}>
-            <div>
-              <h2 className="text-xl md:text-2xl font-bold tracking-tight opacity-90">{activeBook.title}</h2>
-              <span className="text-xs uppercase tracking-widest opacity-60">{activeBook.author}</span>
-            </div>
-            <button
-              onClick={() => {
-                setStep(3);
-                setBookData(null);
-                console.log("Saving to DB before leaving: ", location);
-              }}
-              className="text-sm px-8 py-3 rounded-full border border-current opacity-60 hover:opacity-100 transition-all hover:bg-black/5 dark:hover:bg-white/5"
-            >
-              Close Book
-            </button>
-          </div>
-
-          <div className="relative flex-grow w-full">
-            {isBookLoading ? (
-              <div className="absolute inset-0 flex flex-col items-center justify-center animate-pulse">
-                <div className="w-8 h-8 rounded-full border-t-2 border-current animate-spin mb-4 opacity-50"></div>
-                <p className="literary-text text-xl opacity-70">Opening the pages...</p>
-              </div>
-            ) : bookData ? (
-              <div className="absolute inset-0 w-full h-full">
-                <ReactReader
-                  url={bookData}
-                  title={activeBook.title}
-                  location={location}
-                  locationChanged={(epubcifi) => setLocation(epubcifi)}
-                  epubOptions={{
-                    manager: 'continuous',
-                    flow: 'scrolled',
-                    allowScriptedContent: true,
-                  }}
-                  getRendition={(rendition) => {
-                    rendition.themes.default({
-                      "body": {
-                        "background": `${currentTheme.hexBg} !important`,
-                        "color": `${currentTheme.epubText} !important`,
-                        "font-family": '"Georgia", "Times New Roman", serif !important',
-                        "font-size": "125% !important",
-                        "line-height": "1.8 !important",
-                        "padding": "5% 8% !important",
-                        "scrollbar-width": "thin",
-                        "scrollbar-color": `${currentTheme.scrollbarThumb} ${currentTheme.scrollbarTrack}`
-                      },
-                      "::-webkit-scrollbar": {
-                        "width": "10px !important",
-                      },
-                      "::-webkit-scrollbar-track": {
-                        "background": `${currentTheme.scrollbarTrack} !important`,
-                      },
-                      "::-webkit-scrollbar-thumb": {
-                        "background": `${currentTheme.scrollbarThumb} !important`,
-                        "border-radius": "6px !important",
-                        "border": `3px solid ${currentTheme.scrollbarTrack} !important`
-                      },
-                      "p": {
-                        "font-size": "1.1rem !important",
-                      },
-                      "h1, h2, h3, h4, h5, h6": {
-                        "color": `${currentTheme.epubText} !important`,
-                      },
-                    });
-                  }}
-                  readerStyles={{
-                    ...ReactReaderStyle,
-                    readerArea: {
-                      ...ReactReaderStyle.readerArea,
-                      backgroundColor: currentTheme.hexBg,
-                    },
-                    titleArea: { display: "none" },
-                    arrow: { display: 'none' },
-                    footerArea: { backgroundColor: currentTheme.hexBg, color: currentTheme.epubText, opacity: 0.6},
-                    
-                    // --- THE FIX FOR THE BURGER MENU / TOC ---
-                    tocButton: { 
-                      ...ReactReaderStyle.tocButton,
-                      color: currentTheme.epubText, 
-                      margin: "15px", // Gives it breathing room from the edges
-                      opacity: 0.8,
-                    },
-                    tocButtonBar: {
-                      ...ReactReaderStyle.tocButtonBar,
-                      background: currentTheme.epubText,
-                    },
-                    tocButtonExpanded: { 
-                      ...ReactReaderStyle.tocButtonExpanded,
-                      background: currentTheme.tocBg 
-                    },
-                    tocArea: { 
-                      ...ReactReaderStyle.tocArea,
-                      backgroundColor: currentTheme.tocBg, 
-                      color: currentTheme.epubText,
-                      padding: "40px 24px", 
-                      width: "350px", 
-                      boxShadow: "4px 0 25px rgba(0,0,0,0.5)", 
-                    },
-                  }}
-                />
-              </div>
-            ) : (
-              <div className="absolute inset-0 flex items-center justify-center">
-                <p className="opacity-50 text-sm">Failed to load the book. Please try another.</p>
-              </div>
-            )}
-          </div>
-        </div>
+        <ReadingRoom 
+        activeBook={activeBook}
+        bookData={bookData}
+        location={location}
+        setLocation={setLocation}
+        currentTheme={currentTheme}
+        isBookLoading={isBookLoading}
+        mood={mood}
+        onClose={()=> {
+          setStep(3);
+          setBookData(null); //clear memory
+        }}
+        />
       )}
     </div>
   );

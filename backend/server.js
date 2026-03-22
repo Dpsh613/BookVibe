@@ -3,13 +3,19 @@ import express from "express";
 import cors from "cors";
 import mongoose from "mongoose";
 import bookRoutes from "./routes/bookRoutes.js";
+import authRoutes from "./routes/authRoutes.js";
+import libraryRoutes from "./routes/libraryRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
 // middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.CLIENT_URL || 'http://localhost:5173', // Vite's default local port
+  credentials: true
+}));
+
 app.use(express.json());
 
 // connecting to mongoDB
@@ -20,6 +26,8 @@ mongoose
 
 // routes
 app.use("/api/books", bookRoutes);
+app.use("/api/auth", authRoutes);
+app.use("/api/library", libraryRoutes);
 
 // health check route
 
