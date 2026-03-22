@@ -1,7 +1,7 @@
 import React, { useState, useContext } from "react";
 import axios from "axios";
 import { ReactReader, ReactReaderStyle } from "react-reader";
-import { AuthContext } from "../context/authContext";
+import { AuthContext } from "../context/AuthContext";
 import AuthModal from "./AuthModal";
 
 export default function ReadingRoom({
