@@ -6,6 +6,7 @@ import { MOODS, ERAS } from "./utils/constants";
 import ReadingRoom from "./components/ReadingRoom";
 import MySpace from "./components/MySpace";
 import { AuthContext } from "./context/AuthContext";
+import QuietMoment from "./components/QuietMoment";
 
 export default function App() {
   const { user } = useContext(AuthContext);
@@ -216,12 +217,7 @@ export default function App() {
                 </span>
 
                 {isLoading ? (
-                  <div className="py-20 flex flex-col items-center animate-pulse">
-                    <div className="w-8 h-8 rounded-full border-t-2 border-current animate-spin mb-6 opacity-50"></div>
-                    <p className="literary-text text-xl opacity-70">
-                      Curating your space...
-                    </p>
-                  </div>
+                  <QuietMoment mood={mood} />
                 ) : (
                   <div
                     className="flex overflow-x-auto gap-6 w-full pb-8 snap-x scrollbar-hide"

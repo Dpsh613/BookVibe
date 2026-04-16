@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
+import QuietMoment from "./QuietMoment";
 
 export default function MySpace({ currentTheme, onResumeBook, onBack }) {
   const { user, logout } = useContext(AuthContext);
@@ -59,12 +60,7 @@ export default function MySpace({ currentTheme, onResumeBook, onBack }) {
 
       {/* Content Area */}
       {isLoading ? (
-        <div className="py-20 flex flex-col items-center animate-pulse">
-          <div className="w-8 h-8 rounded-full border-t-2 border-current animate-spin mb-6 opacity-50"></div>
-          <p className="literary-text text-xl opacity-70">
-            Dusting off the shelves...
-          </p>
-        </div>
+        <QuietMoment mood="default" />
       ) : savedBooks.length === 0 ? (
         <div className="py-20 text-center">
           <p className="literary-text text-xl opacity-70 mb-4">
