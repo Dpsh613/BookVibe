@@ -1,26 +1,29 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
 // import { ReactReader, ReactReaderStyle } from "react-reader";
 
-import {MOODS, ERAS} from "./utils/constants"
-import ReadingRoom from "./components/ReadingRoom"
+import { MOODS, ERAS } from "./utils/constants";
+import ReadingRoom from "./components/ReadingRoom";
+import MySpace from "./components/MySpace";
+import { AuthContext } from "./context/AuthContext";
 
 export default function App() {
-  const[step, setStep] = useState(0);
+  const { user } = useContext(AuthContext);
+  const [step, setStep] = useState(0);
   const [mood, setMood] = useState(null);
-  const[era, setEra] = useState(null);
+  const [era, setEra] = useState(null);
 
-  const[books, setBooks] = useState([]);
+  const [books, setBooks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  const[activeBook, setActiveBook] = useState(null);
+  const [activeBook, setActiveBook] = useState(null);
   const [location, setLocation] = useState(null);
 
-  const[bookData, setBookData] = useState(null);
-  const[isBookLoading, setIsBookLoading] = useState(false);
+  const [bookData, setBookData] = useState(null);
+  const [isBookLoading, setIsBookLoading] = useState(false);
 
   const [displayStep, setDisplayStep] = useState(0);
-  const[fadeState, setFadeState] = useState("opacity-100 translate-y-0");
+  const [fadeState, setFadeState] = useState("opacity-100 translate-y-0");
 
   useEffect(() => {
     if (step !== displayStep) {
@@ -37,7 +40,7 @@ export default function App() {
     if (displayStep === 4 && activeBook && !bookData) {
       setIsBookLoading(true);
 
-      const proxyUrl =`${import.meta.env.VITE_API_URL}/api/books/proxy?url=${encodeURIComponent(activeBook.readLink)}`;
+      const proxyUrl = `${import.meta.env.VITE_API_URL}/api/books/proxy?url=${encodeURIComponent(activeBook.readLink)}`;
 
       axios
         .get(proxyUrl, { responseType: "arraybuffer" })
@@ -58,9 +61,12 @@ export default function App() {
     setIsLoading(true);
 
     try {
-      const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/books/discover?mood=${mood}&era=${selectedEra}`);
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/books/discover?mood=${mood}&era=${selectedEra}`,
+      );
 
       setTimeout(() => {
+        console.log(response.data.results);
         setBooks(response.data.results);
         setIsLoading(false);
       }, 800);
@@ -72,24 +78,56 @@ export default function App() {
 
   const currentTheme = mood
     ? MOODS.find((m) => m.id === mood)
-    : { bg: "bg-stone-50", hexBg: "#fafaf9", text: "text-stone-800", border: "border-stone-200" };
+    : {
+        bg: "bg-stone-50",
+        hexBg: "#fafaf9",
+        text: "text-stone-800",
+        border: "border-stone-200",
+      };
+
+  const handleResumeBook = (savedBook) => {
+    setBookData(null);
+    setActiveBook({
+      id: savedBook.bookId,
+      title: savedBook.title,
+      author: savedBook.author,
+      readLink: savedBook.readLink,
+      coverImage: savedBook.coverImage,
+    });
+    setLocation(savedBook.lastLocation); // Load their bookmark!
+    if (savedBook.moodWhenStarted) {
+      setMood(savedBook.moodWhenStarted); // Shift the app theme back to how they felt!
+    }
+    setStep(4); // Jump directly into the Reading Room
+  };
 
   return (
     <div
       className={`min-h-screen w-full flex flex-col items-center justify-center transition-colors duration-1000 ease-in-out ${currentTheme.bg} ${currentTheme.text}`}
     >
       {/* STEPS 0 to 3: Constrained Layout */}
-      {displayStep < 4 && (
+      {displayStep !== 4 && (
         <>
-          {displayStep > 0 && (
+          {/* Top minimal navigation indicator (LEFT) */}
+          {displayStep > 0 && displayStep !== 5 && (
             <div
-              className="absolute top-8 left-8 text-sm tracking-widest uppercase opacity-50 cursor-pointer hover:opacity-100 transition-opacity"
+              className="absolute top-8 left-8 text-sm tracking-widest uppercase opacity-50 cursor-pointer hover:opacity-100 transition-opacity z-10"
               onClick={() => {
                 setStep(0);
                 setBooks([]);
               }}
             >
               BookVibe
+            </div>
+          )}
+
+          {/* Top Navigation User Space (RIGHT) */}
+          {user && displayStep !== 4 && displayStep !== 5 && (
+            <div
+              className="absolute top-8 right-8 text-sm tracking-widest uppercase opacity-50 cursor-pointer hover:opacity-100 transition-opacity z-10 flex items-center gap-2"
+              onClick={() => setStep(5)} // Go to My Space
+            >
+              <span>My Space</span>
             </div>
           )}
 
@@ -103,7 +141,8 @@ export default function App() {
                   Read by feeling.
                 </h1>
                 <p className="opacity-70 text-lg font-light tracking-wide max-w-md mx-auto">
-                  Drop the genres. Forget the categories. Tell us where your mind is right now.
+                  Drop the genres. Forget the categories. Tell us where your
+                  mind is right now.
                 </p>
                 <button
                   onClick={() => setStep(1)}
@@ -160,7 +199,9 @@ export default function App() {
                       className={`p-6 text-center rounded-xl border ${currentTheme.border} hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300 flex flex-col items-center gap-3 hover:-translate-y-1`}
                     >
                       <span className="text-lg literary-text">{e.label}</span>
-                      <span className="text-xs opacity-60 leading-relaxed">{e.desc}</span>
+                      <span className="text-xs opacity-60 leading-relaxed">
+                        {e.desc}
+                      </span>
                     </button>
                   ))}
                 </div>
@@ -177,7 +218,9 @@ export default function App() {
                 {isLoading ? (
                   <div className="py-20 flex flex-col items-center animate-pulse">
                     <div className="w-8 h-8 rounded-full border-t-2 border-current animate-spin mb-6 opacity-50"></div>
-                    <p className="literary-text text-xl opacity-70">Curating your space...</p>
+                    <p className="literary-text text-xl opacity-70">
+                      Curating your space...
+                    </p>
                   </div>
                 ) : (
                   <div
@@ -198,7 +241,9 @@ export default function App() {
                             />
                           ) : (
                             <div className="w-32 h-48 mx-auto bg-black/20 dark:bg-white/20 rounded shadow-inner mb-6 flex items-center justify-center">
-                              <span className="opacity-40 text-xs">No Cover</span>
+                              <span className="opacity-40 text-xs">
+                                No Cover
+                              </span>
                             </div>
                           )}
                           <h3 className="text-2xl literary-text mb-2 text-balance leading-tight">
@@ -214,6 +259,8 @@ export default function App() {
 
                         <button
                           onClick={() => {
+                            setBookData(null);
+                            setLocation(null);
                             setActiveBook(book);
                             setStep(4);
                           }}
@@ -242,23 +289,36 @@ export default function App() {
                 </button>
               </div>
             )}
+
+            {/* STEP 5: My Space (User Library) */}
+            {displayStep === 5 && (
+              <MySpace
+                currentTheme={currentTheme}
+                onResumeBook={handleResumeBook}
+                onBack={() => setStep(0)}
+              />
+            )}
           </main>
         </>
       )}
 
       {displayStep === 4 && activeBook && (
-        <ReadingRoom 
-        activeBook={activeBook}
-        bookData={bookData}
-        location={location}
-        setLocation={setLocation}
-        currentTheme={currentTheme}
-        isBookLoading={isBookLoading}
-        mood={mood}
-        onClose={()=> {
-          setStep(3);
-          setBookData(null); //clear memory
-        }}
+        <ReadingRoom
+          activeBook={activeBook}
+          bookData={bookData}
+          location={location}
+          setLocation={setLocation}
+          currentTheme={currentTheme}
+          isBookLoading={isBookLoading}
+          mood={mood}
+          onClose={() => {
+            setStep(3);
+            setTimeout(() => {
+              setBookData(null);
+              setActiveBook(null);
+              setLocation(null);
+            }, 600);
+          }}
         />
       )}
     </div>

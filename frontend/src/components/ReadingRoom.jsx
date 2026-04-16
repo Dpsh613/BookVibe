@@ -77,6 +77,12 @@ export default function ReadingRoom({
               >
                 No, just close
               </button>
+              <button
+                onClick={() => setShowPrompt(false)}
+                className="w-full py-3 mt-2 text-sm text-white opacity-50 hover:opacity-100 underline underline-offset-4 transition-all"
+              >
+                Cancel, return to reading
+              </button>
             </div>
           </div>
         </div>
@@ -129,6 +135,7 @@ export default function ReadingRoom({
         ) : bookData ? (
           <div className="absolute inset-0 w-full h-full">
             <ReactReader
+              key={activeBook.id}
               url={bookData}
               title={activeBook.title}
               location={location}
