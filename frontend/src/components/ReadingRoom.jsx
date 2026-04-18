@@ -19,6 +19,8 @@ export default function ReadingRoom({
   const [userReadyToRead, setUserReadyToRead] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  // 1. NEW STATE: Track WHY the auth modal is opening
+  const [authReason, setAuthReason] = useState(null); // 'book' or 'journal'
 
   // 1. User clicks Close Book
   const handleCloseRequest = () => {
@@ -95,11 +97,14 @@ export default function ReadingRoom({
           currentTheme={currentTheme}
           onComplete={() => {
             setShowAuthModal(false);
-            handleSaveProgress();
+            // 2. Only save the book if that was the reason!
+            if (authReason === "book") {
+              handleSaveProgress();
+            }
           }}
           onCancel={() => {
             setShowAuthModal(false);
-            setShowPrompt(false);
+            if (authReason === "book") setShowPrompt(false);
           }}
         />
       )}
@@ -139,6 +144,10 @@ export default function ReadingRoom({
               waitMessage="Preparing your book in the background..."
               readyMessage="The pages are ready."
               buttonText="Step Inside the Book"
+              onRequestAuth={() => {
+                setAuthReason("journal");
+                setShowAuthModal(true);
+              }}
             />
           </div>
         ) : bookData ? (

@@ -4,11 +4,14 @@ import { MOODS, ERAS, DEFAULT_THEME } from "./utils/constants";
 import ReadingRoom from "./components/ReadingRoom";
 import MySpace from "./components/MySpace";
 import { AuthContext } from "./context/AuthContext";
+import AuthModal from "./components/AuthModal";
 import InteractiveWait from "./components/InteractiveWait";
 import SearchOverlay from "./components/SearchOverlay"; // NEW IMPORT
 
 export default function App() {
   const { user, logout } = useContext(AuthContext);
+  // global auth modal
+  const [showGlobalAuth, setShowGlobalAuth] = useState(false);
 
   const [step, setStep] = useState(0);
   const [prevStep, setPrevStep] = useState(0);
@@ -277,13 +280,14 @@ export default function App() {
           >
             {!userReadyForBooks ? (
               <InteractiveWait
-                key={searchId} // <-- ADD THE KEY HERE
+                key={searchId}
                 phase="discovery"
                 mood={mood}
                 isReady={!isLoading && books.length > 0}
                 onProceed={() => setUserReadyForBooks(true)}
                 currentTheme={currentTheme}
                 buttonText="View Recommendations"
+                onRequestAuth={() => setShowGlobalAuth(true)}
               />
             ) : (
               <div className="w-full flex flex-col items-center animate-in fade-in duration-700">
@@ -397,6 +401,14 @@ export default function App() {
               setLocation(null);
             }, 600);
           }}
+        />
+      )}
+      {/*  Adding the AuthModal component to render globally */}
+      {showGlobalAuth && (
+        <AuthModal
+          currentTheme={currentTheme}
+          onComplete={() => setShowGlobalAuth(false)}
+          onCancel={() => setShowGlobalAuth(false)}
         />
       )}
     </div>

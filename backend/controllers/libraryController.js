@@ -1,8 +1,5 @@
-import Library from "../models/Library.js"; // Match your exact file name
+import Library from "../models/Library.js";
 
-// @desc    Save or update reading progress
-// @route   POST /api/library/save
-// @access  Private
 const saveProgress = async (req, res) => {
   const {
     bookId,
@@ -13,16 +10,21 @@ const saveProgress = async (req, res) => {
     lastLocation,
     moodWhenStarted,
   } = req.body;
-  const userId = req.user._id; // Provided by authMiddleware
+  const userId = req.user._id;
 
   try {
-    // 1. Check if the book is already in the user's library
-    let libraryItem = await Library.findOne({ userId, bookId });
+    // 1. Force bookId to be a Number so Mongoose never gets confused
+    const numericBookId = Number(bookId);
+
+    // 2. Search for the existing book using exact types
+    let libraryItem = await Library.findOne({ userId, bookId: numericBookId });
 
     if (libraryItem) {
-      // 2. If it exists, UPDATE the location and last read time
-      libraryItem.lastLocation = lastLocation;
-      libraryItem.lastReadAt = Date.now(); // Assuming you fixed the typo in schema
+      // 3. UPDATE: Only overwrite location if a new valid location is provided
+      if (lastLocation) {
+        libraryItem.lastLocation = lastLocation;
+      }
+      libraryItem.lastReadAt = Date.now();
       await libraryItem.save();
 
       return res
@@ -30,10 +32,10 @@ const saveProgress = async (req, res) => {
         .json({ message: "Progress updated quietly.", libraryItem });
     }
 
-    // 3. If it doesn't exist, CREATE a new entry in their library
+    // 4. CREATE new entry if it doesn't exist
     libraryItem = await Library.create({
       userId,
-      bookId,
+      bookId: numericBookId,
       title,
       author,
       coverImage,

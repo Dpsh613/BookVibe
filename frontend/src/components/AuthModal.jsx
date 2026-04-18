@@ -28,11 +28,21 @@ export default function AuthModal({ currentTheme, onComplete, onCancel }) {
 
   return (
     <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm animate-in fade-in">
+      {/* ADDED 'relative' to this container so the X stays exactly in the top right corner */}
       <div
-        className={`p-10 md:p-14 rounded-2xl border ${currentTheme.border} w-full max-w-md bg-opacity-95 shadow-2xl`}
+        className={`relative p-10 md:p-14 rounded-2xl border ${currentTheme.border} w-full max-w-md bg-opacity-95 shadow-2xl`}
         style={{ backgroundColor: currentTheme.hexBg }}
       >
-        <h3 className="text-3xl literary-text mb-2 text-center">
+        {/* NEW Elegant 'X' Close Button */}
+        <button
+          onClick={onCancel}
+          className="absolute top-6 right-6 text-lg opacity-40 hover:opacity-100 transition-all w-8 h-8 flex items-center justify-center rounded-full hover:bg-black/5 dark:hover:bg-white/5"
+          aria-label="Close"
+        >
+          ✕
+        </button>
+
+        <h3 className="text-3xl literary-text mb-2 text-center mt-2">
           Identify Yourself
         </h3>
         <p className="text-sm opacity-60 text-center mb-8">
@@ -90,18 +100,11 @@ export default function AuthModal({ currentTheme, onComplete, onCancel }) {
         <div className="mt-6 text-center">
           <button
             onClick={() => setIsLogin(!isLogin)}
-            className="text-xs opacity-50 hover:opacity-100 underline underline-offset-4"
+            className="text-xs opacity-50 hover:opacity-100 underline underline-offset-4 transition-all"
           >
             {isLogin ? "I don't have a space yet" : "I already have a space"}
           </button>
         </div>
-
-        <button
-          onClick={onCancel}
-          className="absolute top-6 right-6 text-sm opacity-50 hover:opacity-100"
-        >
-          Cancel
-        </button>
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ export default function InteractiveWait({
   onProceed,
   currentTheme,
   buttonText = "Proceed",
+  onRequestAuth,
 }) {
   const { user } = useContext(AuthContext);
   const [prompt, setPrompt] = useState("");
@@ -118,6 +119,7 @@ export default function InteractiveWait({
         <textarea
           value={answer}
           onChange={(e) => setAnswer(e.target.value)}
+          onClick={onRequestAuth}
           placeholder="Record a passing thought, or simply rest here..."
           className="w-full bg-transparent border-b-2 border-current/20 p-2 min-h-[60px] outline-none opacity-70 focus:opacity-100 focus:border-current transition-all placeholder-current/50 resize-none literary-text text-xl text-center"
           style={{ color: currentTheme?.text }}
