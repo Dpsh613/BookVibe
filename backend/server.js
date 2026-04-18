@@ -5,16 +5,19 @@ import mongoose from "mongoose";
 import bookRoutes from "./routes/bookRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import libraryRoutes from "./routes/libraryRoutes.js";
+import reflectionRoutes from "./routes/reflectionRoutes.js";
 
 dotenv.config();
 
 const app = express();
 
 // middleware
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:5173', // Vite's default local port
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.CLIENT_URL || "http://localhost:5173", // Vite's default local port
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 
@@ -28,6 +31,7 @@ mongoose
 app.use("/api/books", bookRoutes);
 app.use("/api/auth", authRoutes);
 app.use("/api/library", libraryRoutes);
+app.use("/api/reflections", reflectionRoutes);
 
 // health check route
 

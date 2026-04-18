@@ -3,7 +3,7 @@ import axios from "axios";
 import { ReactReader, ReactReaderStyle } from "react-reader";
 import { AuthContext } from "../context/AuthContext";
 import AuthModal from "./AuthModal";
-import QuietMoment from "./QuietMoment";
+import InteractiveWait from "./InteractiveWait";
 
 export default function ReadingRoom({
   activeBook,
@@ -16,6 +16,7 @@ export default function ReadingRoom({
   mood,
 }) {
   const { user } = useContext(AuthContext);
+  const [userReadyToRead, setUserReadyToRead] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -126,9 +127,19 @@ export default function ReadingRoom({
 
       {/* READER AREA */}
       <div className="relative flex-grow w-full overflow-hidden">
-        {isBookLoading ? (
-          <div className="absolute inset-0 flex flex-col items-center justify-center bg-inherit z-10">
-            <QuietMoment mood={mood} />
+        {!userReadyToRead ? (
+          <div className="absolute inset-0 z-10 flex flex-col items-center justify-center overflow-y-auto pb-10">
+            <InteractiveWait
+              phase="reading"
+              mood={mood}
+              bookTitle={activeBook.title}
+              isReady={!isBookLoading && bookData !== null}
+              onProceed={() => setUserReadyToRead(true)}
+              currentTheme={currentTheme}
+              waitMessage="Preparing your book in the background..."
+              readyMessage="The pages are ready."
+              buttonText="Step Inside the Book"
+            />
           </div>
         ) : bookData ? (
           <div className="absolute inset-0 w-full h-full">

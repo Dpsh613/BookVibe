@@ -1,21 +1,28 @@
 import React, { useState, useEffect, useContext } from "react";
 import axios from "axios";
-// import { ReactReader, ReactReaderStyle } from "react-reader";
-
-import { MOODS, ERAS } from "./utils/constants";
+import { MOODS, ERAS, DEFAULT_THEME } from "./utils/constants";
 import ReadingRoom from "./components/ReadingRoom";
 import MySpace from "./components/MySpace";
 import { AuthContext } from "./context/AuthContext";
-import QuietMoment from "./components/QuietMoment";
+import InteractiveWait from "./components/InteractiveWait";
+import SearchOverlay from "./components/SearchOverlay"; // NEW IMPORT
 
 export default function App() {
-  const { user } = useContext(AuthContext);
+  const { user, logout } = useContext(AuthContext);
+
   const [step, setStep] = useState(0);
+  const [prevStep, setPrevStep] = useState(0);
+
   const [mood, setMood] = useState(null);
   const [era, setEra] = useState(null);
 
+  // dislay none on css so it wont always reload when searching books...
+  const [searchId, setSearchId] = useState(0);
+  const [isSearchOpen, setIsSearchOpen] = useState(false); // NEW STATE
+
   const [books, setBooks] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [userReadyForBooks, setUserReadyForBooks] = useState(false);
 
   const [activeBook, setActiveBook] = useState(null);
   const [location, setLocation] = useState(null);
@@ -40,9 +47,7 @@ export default function App() {
   useEffect(() => {
     if (displayStep === 4 && activeBook && !bookData) {
       setIsBookLoading(true);
-
       const proxyUrl = `${import.meta.env.VITE_API_URL}/api/books/proxy?url=${encodeURIComponent(activeBook.readLink)}`;
-
       axios
         .get(proxyUrl, { responseType: "arraybuffer" })
         .then((response) => {
@@ -58,33 +63,42 @@ export default function App() {
 
   const handleDiscover = async (selectedEra) => {
     setEra(selectedEra);
+    setSearchId((prev) => prev + 1);
     setStep(3);
     setIsLoading(true);
+    setUserReadyForBooks(false);
 
     try {
       const response = await axios.get(
         `${import.meta.env.VITE_API_URL}/api/books/discover?mood=${mood}&era=${selectedEra}`,
       );
-
-      setTimeout(() => {
-        console.log(response.data.results);
-        setBooks(response.data.results);
-        setIsLoading(false);
-      }, 800);
+      setBooks(response.data.results);
+      setIsLoading(false);
     } catch (error) {
       console.error("Error fetching books:", error);
       setIsLoading(false);
     }
   };
 
-  const currentTheme = mood
-    ? MOODS.find((m) => m.id === mood)
-    : {
-        bg: "bg-stone-50",
-        hexBg: "#fafaf9",
-        text: "text-stone-800",
-        border: "border-stone-200",
-      };
+  const handleSearch = async (query) => {
+    setIsSearchOpen(false);
+
+    setSearchId((prev) => prev + 1);
+    setStep(3);
+    setIsLoading(true);
+    setUserReadyForBooks(false);
+
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/api/books/search?q=${encodeURIComponent(query)}`,
+      );
+      setBooks(response.data.results);
+      setIsLoading(false);
+    } catch (error) {
+      console.error("Error searching books:", error);
+      setIsLoading(false);
+    }
+  };
 
   const handleResumeBook = (savedBook) => {
     setBookData(null);
@@ -95,129 +109,200 @@ export default function App() {
       readLink: savedBook.readLink,
       coverImage: savedBook.coverImage,
     });
-    setLocation(savedBook.lastLocation); // Load their bookmark!
-    if (savedBook.moodWhenStarted) {
-      setMood(savedBook.moodWhenStarted); // Shift the app theme back to how they felt!
-    }
-    setStep(4); // Jump directly into the Reading Room
+    setLocation(savedBook.lastLocation);
+    if (savedBook.moodWhenStarted) setMood(savedBook.moodWhenStarted);
+    setStep(4);
   };
+
+  const handleLogout = () => {
+    logout();
+    setStep(0);
+  };
+
+  const currentTheme = mood ? MOODS.find((m) => m.id === mood) : DEFAULT_THEME;
 
   return (
     <div
       className={`min-h-screen w-full flex flex-col items-center justify-center transition-colors duration-1000 ease-in-out ${currentTheme.bg} ${currentTheme.text}`}
     >
-      {/* STEPS 0 to 3: Constrained Layout */}
+      {/* SEARCH OVERLAY */}
+      <SearchOverlay
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
+        onSearch={handleSearch}
+        currentTheme={currentTheme}
+      />
+
+      {/* FIXED GLOBAL HEADER */}
       {displayStep !== 4 && (
-        <>
-          {/* Top minimal navigation indicator (LEFT) */}
-          {displayStep > 0 && displayStep !== 5 && (
-            <div
-              className="absolute top-8 left-8 text-sm tracking-widest uppercase opacity-50 cursor-pointer hover:opacity-100 transition-opacity z-10"
-              onClick={() => {
-                setStep(0);
-                setBooks([]);
-              }}
-            >
-              BookVibe
-            </div>
-          )}
+        <header className="fixed top-0 left-0 w-full px-6 py-8 md:px-10 flex justify-between items-center z-50 pointer-events-none">
+          <div className="pointer-events-auto">
+            {displayStep === 5 ? (
+              <button
+                onClick={() => setStep(prevStep)}
+                className="text-sm tracking-widest uppercase opacity-50 hover:opacity-100 transition-all flex items-center gap-2"
+              >
+                ← Back
+              </button>
+            ) : (
+              // ALWAYS VISIBLE BOOKVIBE LOGO
+              <button
+                onClick={() => {
+                  setStep(0);
+                  setBooks([]);
+                }}
+                className="text-sm tracking-widest uppercase opacity-50 hover:opacity-100 transition-all font-semibold"
+              >
+                BookVibe
+              </button>
+            )}
+          </div>
 
-          {/* Top Navigation User Space (RIGHT) */}
-          {user && displayStep !== 4 && displayStep !== 5 && (
-            <div
-              className="absolute top-8 right-8 text-sm tracking-widest uppercase opacity-50 cursor-pointer hover:opacity-100 transition-opacity z-10 flex items-center gap-2"
-              onClick={() => setStep(5)} // Go to My Space
-            >
-              <span>My Space</span>
-            </div>
-          )}
-
-          <main
-            className={`w-full max-w-4xl px-6 transition-all duration-700 ease-in-out ${fadeState}`}
-          >
-            {/* STEP 0 */}
-            {displayStep === 0 && (
-              <div className="text-center space-y-8">
-                <h1 className="text-5xl md:text-6xl font-light literary-text tracking-wide">
-                  Read by feeling.
-                </h1>
-                <p className="opacity-70 text-lg font-light tracking-wide max-w-md mx-auto">
-                  Drop the genres. Forget the categories. Tell us where your
-                  mind is right now.
-                </p>
-                <button
-                  onClick={() => setStep(1)}
-                  className="mt-8 px-8 py-3 rounded-full border border-current opacity-70 hover:opacity-100 hover:scale-105 transition-all duration-300"
-                >
-                  Begin
-                </button>
-              </div>
+          <div className="pointer-events-auto flex items-center gap-6 md:gap-8">
+            {/* NEW SEARCH BUTTON ALWAYS IN HEADER */}
+            {displayStep !== 5 && (
+              <button
+                onClick={() => setIsSearchOpen(true)}
+                className="text-sm tracking-widest uppercase opacity-50 hover:opacity-100 transition-all flex items-center gap-2"
+              >
+                Search
+              </button>
             )}
 
-            {/* STEP 1 */}
-            {displayStep === 1 && (
-              <div className="w-full">
-                <h2 className="text-3xl md:text-4xl text-center mb-12 literary-text">
-                  How are you feeling?
+            {displayStep === 5 ? (
+              <button
+                onClick={handleLogout}
+                className="text-sm tracking-widest uppercase opacity-40 hover:opacity-100 transition-all"
+              >
+                Log out
+              </button>
+            ) : user ? (
+              <button
+                onClick={() => {
+                  setPrevStep(step);
+                  setStep(5);
+                }}
+                className="text-sm tracking-widest uppercase opacity-50 hover:opacity-100 transition-all"
+              >
+                My Space
+              </button>
+            ) : null}
+          </div>
+        </header>
+      )}
+
+      {/* Main Content Area */}
+      {displayStep !== 4 && (
+        <main
+          className={`w-full max-w-4xl px-6 transition-all duration-700 ease-in-out ${fadeState} mt-16`}
+        >
+          {displayStep === 0 && (
+            <div className="text-center space-y-8">
+              <h1 className="text-5xl md:text-6xl font-light literary-text tracking-wide">
+                Read by feeling.
+              </h1>
+              <p className="opacity-70 text-lg font-light tracking-wide max-w-md mx-auto">
+                Drop the genres. Forget the categories. Tell us where your mind
+                is right now.
+              </p>
+              <button
+                onClick={() => setStep(1)}
+                className="mt-8 px-8 py-3 rounded-full border border-current opacity-70 hover:opacity-100 hover:scale-105 transition-all duration-300"
+              >
+                Begin
+              </button>
+            </div>
+          )}
+
+          {/* STEP 1 - RESTORED ORIGINAL LAYOUT */}
+          {displayStep === 1 && (
+            <div className="w-full">
+              <h2 className="text-3xl md:text-4xl text-center mb-12 literary-text">
+                How are you feeling?
+              </h2>
+              <div className="flex flex-col gap-4">
+                {MOODS.map((m) => (
+                  <button
+                    key={m.id}
+                    onClick={() => {
+                      setMood(m.id);
+                      setStep(2);
+                    }}
+                    className={`group w-full p-6 text-left rounded-xl border ${currentTheme.border} hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300 flex justify-between items-center`}
+                  >
+                    <span className="text-xl literary-text">{m.label}</span>
+                    <span className="opacity-0 group-hover:opacity-60 transition-opacity text-sm tracking-wider">
+                      {m.prompt}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {displayStep === 2 && (
+            <div className="w-full">
+              <div className="text-center mb-12">
+                <span className="text-sm tracking-widest uppercase opacity-50 mb-4 block">
+                  Mood: {MOODS.find((m) => m.id === mood)?.label}
+                </span>
+                <h2 className="text-3xl md:text-4xl literary-text">
+                  Where do you want to escape to?
                 </h2>
-                <div className="flex flex-col gap-4">
-                  {MOODS.map((m) => (
-                    <button
-                      key={m.id}
-                      onClick={() => {
-                        setMood(m.id);
-                        setStep(2);
-                      }}
-                      className={`group w-full p-6 text-left rounded-xl border ${currentTheme.border} hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300 flex justify-between items-center`}
-                    >
-                      <span className="text-xl literary-text">{m.label}</span>
-                      <span className="opacity-0 group-hover:opacity-60 transition-opacity text-sm tracking-wider">
-                        {m.prompt}
-                      </span>
-                    </button>
-                  ))}
-                </div>
               </div>
-            )}
-
-            {/* STEP 2 */}
-            {displayStep === 2 && (
-              <div className="w-full">
-                <div className="text-center mb-12">
-                  <span className="text-sm tracking-widest uppercase opacity-50 mb-4 block">
-                    Mood: {MOODS.find((m) => m.id === mood)?.label}
-                  </span>
-                  <h2 className="text-3xl md:text-4xl literary-text">
-                    Where do you want to escape to?
-                  </h2>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {ERAS.map((e) => (
-                    <button
-                      key={e.id}
-                      onClick={() => handleDiscover(e.id)}
-                      className={`p-6 text-center rounded-xl border ${currentTheme.border} hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300 flex flex-col items-center gap-3 hover:-translate-y-1`}
-                    >
-                      <span className="text-lg literary-text">{e.label}</span>
-                      <span className="text-xs opacity-60 leading-relaxed">
-                        {e.desc}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {ERAS.map((e) => (
+                  <button
+                    key={e.id}
+                    onClick={() => handleDiscover(e.id)}
+                    className={`p-6 text-center rounded-xl border ${currentTheme.border} hover:bg-black/5 dark:hover:bg-white/5 transition-all duration-300 flex flex-col items-center gap-3 hover:-translate-y-1`}
+                  >
+                    <span className="text-lg literary-text">{e.label}</span>
+                    <span className="text-xs opacity-60 leading-relaxed">
+                      {e.desc}
+                    </span>
+                  </button>
+                ))}
               </div>
-            )}
+            </div>
+          )}
 
-            {/* STEP 3 */}
-            {displayStep === 3 && (
-              <div className="w-full flex flex-col items-center text-center space-y-8">
-                <span className="text-sm tracking-widest uppercase opacity-50 block">
+          {/* displayStepREPLACE {displayStep === 3 && ...} WITH THIS: */}
+          <div
+            className={
+              displayStep === 3
+                ? "w-full flex flex-col items-center text-center space-y-8 min-h-[60vh] justify-center"
+                : "hidden"
+            }
+          >
+            {!userReadyForBooks ? (
+              <InteractiveWait
+                key={searchId} // <-- ADD THE KEY HERE
+                phase="discovery"
+                mood={mood}
+                isReady={!isLoading && books.length > 0}
+                onProceed={() => setUserReadyForBooks(true)}
+                currentTheme={currentTheme}
+                buttonText="View Recommendations"
+              />
+            ) : (
+              <div className="w-full flex flex-col items-center animate-in fade-in duration-700">
+                <span className="text-sm tracking-widest uppercase opacity-50 block mb-8">
                   A quiet discovery
                 </span>
 
-                {isLoading ? (
-                  <QuietMoment mood={mood} />
+                {books.length === 0 ? (
+                  <div className="py-12 text-center max-w-md">
+                    <p className="text-xl literary-text opacity-70 mb-4">
+                      We couldn't find exactly what you were looking for.
+                    </p>
+                    <button
+                      onClick={() => setStep(1)}
+                      className="text-sm opacity-50 hover:opacity-100 underline decoration-1 underline-offset-4 transition-all mt-4"
+                    >
+                      Try another search or pick a mood
+                    </button>
+                  </div>
                 ) : (
                   <div
                     className="flex overflow-x-auto gap-6 w-full pb-8 snap-x scrollbar-hide"
@@ -249,10 +334,9 @@ export default function App() {
                             {book.author}
                           </p>
                           <p className="text-xs leading-relaxed opacity-70 mb-8 line-clamp-3">
-                            Subjects: {book.subjects.slice(0, 3).join(", ")}
+                            Subjects: {book.subjects?.slice(0, 3).join(", ")}
                           </p>
                         </div>
-
                         <button
                           onClick={() => {
                             setBookData(null);
@@ -260,14 +344,15 @@ export default function App() {
                             setActiveBook(book);
                             setStep(4);
                           }}
-                          className={`w-full py-3 rounded-lg bg-current opacity-90 hover:opacity-100 hover:scale-[1.02] transition-all flex justify-center items-center`}
+                          className={`w-full py-3 rounded-lg ${currentTheme.buttonBg || "bg-current"} ${currentTheme.buttonText || currentTheme.text} opacity-95 hover:opacity-100 hover:scale-[1.02] shadow-md transition-all flex justify-center items-center`}
                         >
                           <span
-                            className={`text-sm font-medium ${
-                              mood === "nostalgic" || mood === "romantic"
-                                ? "text-white"
-                                : "text-black dark:text-zinc-900"
-                            }`}
+                            className="text-sm font-semibold tracking-wide"
+                            style={
+                              !currentTheme.buttonBg
+                                ? { color: currentTheme.epubText }
+                                : {}
+                            }
                           >
                             Enter the Book
                           </span>
@@ -276,7 +361,6 @@ export default function App() {
                     ))}
                   </div>
                 )}
-
                 <button
                   onClick={() => setStep(1)}
                   className="text-sm opacity-50 hover:opacity-100 underline decoration-1 underline-offset-4 transition-all mt-4"
@@ -285,17 +369,15 @@ export default function App() {
                 </button>
               </div>
             )}
+          </div>
 
-            {/* STEP 5: My Space (User Library) */}
-            {displayStep === 5 && (
-              <MySpace
-                currentTheme={currentTheme}
-                onResumeBook={handleResumeBook}
-                onBack={() => setStep(0)}
-              />
-            )}
-          </main>
-        </>
+          {displayStep === 5 && (
+            <MySpace
+              currentTheme={currentTheme}
+              onResumeBook={handleResumeBook}
+            />
+          )}
+        </main>
       )}
 
       {displayStep === 4 && activeBook && (

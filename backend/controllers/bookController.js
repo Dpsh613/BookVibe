@@ -32,8 +32,6 @@ const discoverBooks = async (req, res) => {
         results: cache.get(cacheKey),
       });
     }
-
-    // --- IF NOT IN CACHE, CALL GUTENDEX ---
     // Encode the topic! "fairy tales" becomes "fairy%20tales"
     const encodedTopic = encodeURIComponent(selectedTopic);
 
@@ -108,4 +106,54 @@ const proxyEpub = async (req, res) => {
   }
 };
 
-export { discoverBooks, proxyEpub };
+// ADD ON FEATURE - SHOWING SEARCH RESULTS - 8
+const searchBooks = async (req, res) => {
+  try {
+    const { q } = req.query;
+    if (!q)
+      return res
+        .status(400)
+        .json({ success: false, message: "No query provided" });
+
+    const cacheKey = `search-${q.toLowerCase()}`;
+
+    // Check Cache
+    if (cache.has(cacheKey)) {
+      console.log(`⚡ Serving search from cache: ${cacheKey}`);
+      return res
+        .status(200)
+        .json({ success: true, results: cache.get(cacheKey) });
+    }
+
+    console.log(`🐌 Fetching search from API: ${q}`);
+    const gutendexUrl = `https://gutendex.com/books?search=${encodeURIComponent(q)}`;
+    const response = await axios.get(gutendexUrl);
+
+    const formattedBooks = response.data.results
+      .filter(
+        (book) =>
+          book.formats["application/epub+zip"] || book.formats["text/html"],
+      )
+      .map((book) => ({
+        id: book.id,
+        title: book.title,
+        author: book.authors.length > 0 ? book.authors[0].name : "Unknown",
+        coverImage: book.formats["image/jpeg"] || null,
+        readLink:
+          book.formats["application/epub+zip"] || book.formats["text/html"],
+        subjects: book.subjects,
+      }))
+      .slice(0, 8); // Keep UI clean with top 8 hits
+
+    if (formattedBooks.length > 0) {
+      cache.set(cacheKey, formattedBooks);
+    }
+
+    res.status(200).json({ success: true, results: formattedBooks });
+  } catch (error) {
+    console.error("Search error:", error.message);
+    res.status(500).json({ success: false, message: "Failed to search books" });
+  }
+};
+
+export { discoverBooks, proxyEpub, searchBooks };

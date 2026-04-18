@@ -1,3 +1,4 @@
+// Add explicit button styles to ensure perfect contrast on every theme
 export const MOODS = [
   {
     id: "reflective",
@@ -5,6 +6,8 @@ export const MOODS = [
     bg: "bg-slate-900",
     text: "text-slate-200",
     border: "border-slate-700",
+    buttonBg: "bg-slate-200",
+    buttonText: "text-slate-900",
     prompt: "I want to think deeply.",
     hexBg: "#0f172a",
     tocBg: "#1e293b",
@@ -18,6 +21,8 @@ export const MOODS = [
     bg: "bg-[#f4ecd8]",
     text: "text-amber-950",
     border: "border-amber-200",
+    buttonBg: "bg-amber-950",
+    buttonText: "text-[#f4ecd8]",
     prompt: "I want something comforting.",
     hexBg: "#f4ecd8",
     tocBg: "#eaddc5",
@@ -31,6 +36,8 @@ export const MOODS = [
     bg: "bg-[#1a0b0c]",
     text: "text-[#fecaca]",
     border: "border-[#3f1619]",
+    buttonBg: "bg-[#fecaca]",
+    buttonText: "text-[#1a0b0c]",
     prompt: "I want tension and mystery.",
     hexBg: "#1a0b0c",
     tocBg: "#2d1417",
@@ -44,6 +51,8 @@ export const MOODS = [
     bg: "bg-rose-50",
     text: "text-rose-950",
     border: "border-rose-200",
+    buttonBg: "bg-rose-950",
+    buttonText: "text-rose-50",
     prompt: "I want to feel dreamy.",
     hexBg: "#fff1f2",
     tocBg: "#ffe4e6",
@@ -57,6 +66,8 @@ export const MOODS = [
     bg: "bg-teal-950",
     text: "text-teal-100",
     border: "border-teal-800",
+    buttonBg: "bg-teal-100",
+    buttonText: "text-teal-950",
     prompt: "Take me far away.",
     hexBg: "#042f2e",
     tocBg: "#115e59",
@@ -65,6 +76,22 @@ export const MOODS = [
     scrollbarTrack: "#042f2e",
   },
 ];
+
+// DEFAULT THEME
+export const DEFAULT_THEME = {
+  id: "default",
+  label: "Default",
+  bg: "bg-[#fdfbf7]", // Warm parchment paper
+  text: "text-[#2a2826]", // Soft charcoal ink
+  border: "border-[#e6e2d8]",
+  buttonBg: "bg-[#2a2826]",
+  buttonText: "text-[#fdfbf7]",
+  hexBg: "#fdfbf7",
+  tocBg: "#f2efe8",
+  epubText: "#2a2826",
+  scrollbarThumb: "#d6d2c4",
+  scrollbarTrack: "#fdfbf7",
+};
 
 export const ERAS = [
   {
