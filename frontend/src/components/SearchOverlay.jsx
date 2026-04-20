@@ -68,7 +68,7 @@ export default function SearchOverlay({
             autoFocus
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search by title, author, or feeling..."
+            placeholder="Search Books..."
             className="w-full bg-transparent border-b border-current pb-4 text-xl md:text-2xl outline-none opacity-60 focus:opacity-100 transition-all placeholder-current"
           />
           <button

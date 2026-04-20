@@ -19,7 +19,6 @@ export default function ReadingRoom({
   const [userReadyToRead, setUserReadyToRead] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  // 1. NEW STATE: Track WHY the auth modal is opening
   const [authReason, setAuthReason] = useState(null); // 'book' or 'journal'
 
   // 1. User clicks Close Book
@@ -173,9 +172,11 @@ export default function ReadingRoom({
                     color: `${currentTheme.epubText} !important`,
                     "font-family":
                       '"Georgia", "Times New Roman", serif !important',
-                    "font-size": "clamp(16px, 2.5vw, 22px) !important",
+                    "font-size": "clamp(8px, 2.5vw, 22px) !important",
                     "line-height": "1.7 !important",
-                    padding: "0 5% !important",
+                    // THE NEW PADDING LOGIC
+                    padding: "0 2px !important",
+                    margin: "0 !important",
                     "box-sizing": "border-box !important",
                     "max-width": "100% !important",
                     "overflow-x": "hidden !important",
@@ -211,6 +212,8 @@ export default function ReadingRoom({
                   ...ReactReaderStyle.readerArea,
                   backgroundColor: currentTheme.hexBg,
                   transition: "all 0.3s ease",
+                  // THE NEW PADDING LOGIC
+                  padding: "0 !important",
                 },
                 titleArea: { display: "none" },
                 arrow: { display: "none" },
@@ -220,7 +223,7 @@ export default function ReadingRoom({
                   opacity: 0.6,
                 },
 
-                // --- TOC (LEFT NAVBAR) ---
+                // --- TOC (LEFT NAVBAR) - YOUR WORKING OLD LOGIC ---
                 tocButton: {
                   ...ReactReaderStyle.tocButton,
                   color: currentTheme.epubText,
@@ -240,20 +243,18 @@ export default function ReadingRoom({
                   ...ReactReaderStyle.tocArea,
                   backgroundColor: currentTheme.tocBg,
                   color: currentTheme.epubText,
-                  padding: "60px 0px 20px 0px", // Removed side padding so items hit edges
                   width: "85vw",
                   maxWidth: "350px",
                   boxShadow: "4px 0 25px rgba(0,0,0,0.5)",
                 },
-                // --- THE CRITICAL FIX FOR RIGIDITY ---
                 tocAreaButton: {
                   ...ReactReaderStyle.tocAreaButton,
                   color: currentTheme.epubText,
-                  whiteSpace: "normal", // Forces long titles to wrap
-                  wordWrap: "break-word", // Breaks words if absolutely necessary
-                  lineHeight: "1.5",
-                  padding: "16px 24px", // Much larger, breathable touch targets
-                  borderBottom: `1px solid ${currentTheme.epubText}20`, // Soft separator line
+                  whiteSpace: "normal",
+                  wordWrap: "break-word",
+                  lineHeight: "1.2",
+                  padding: "16px 0px 16px 5px",
+                  borderBottom: `1px solid ${currentTheme.epubText}20`,
                   textAlign: "left",
                   width: "100%",
                   display: "block",
