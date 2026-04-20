@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { ReactReader, ReactReaderStyle } from "react-reader";
 import { AuthContext } from "../context/AuthContext";
@@ -19,17 +19,20 @@ export default function ReadingRoom({
   const [userReadyToRead, setUserReadyToRead] = useState(false);
   const [showPrompt, setShowPrompt] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authReason, setAuthReason] = useState(null); // 'book' or 'journal'
+
+  // Track WHY the user is logging in (to save the book vs to save a journal entry)
+  const [authReason, setAuthReason] = useState(null);
 
   // 1. User clicks Close Book
   const handleCloseRequest = () => {
-    setShowPrompt(true); // Ask them if they want to save
+    setShowPrompt(true);
   };
 
   // 2. User clicks "Yes, save my spot"
   const handleSaveProgress = async () => {
     if (!user) {
-      setShowAuthModal(true); // Need to login first!
+      setAuthReason("book");
+      setShowAuthModal(true);
       return;
     }
 
@@ -69,7 +72,7 @@ export default function ReadingRoom({
             <div className="flex flex-col gap-4 max-w-xs mx-auto">
               <button
                 onClick={handleSaveProgress}
-                className="px-8 py-4 rounded-full bg-white text-black hover:scale-105 transition-all"
+                className="px-8 py-4 rounded-full bg-white text-black font-semibold hover:scale-105 transition-all shadow-xl"
               >
                 Yes, save my spot
               </button>
@@ -96,21 +99,23 @@ export default function ReadingRoom({
           currentTheme={currentTheme}
           onComplete={() => {
             setShowAuthModal(false);
-            // 2. Only save the book if that was the reason!
+            // Only trigger the book save if that's why they opened the modal
             if (authReason === "book") {
               handleSaveProgress();
             }
           }}
           onCancel={() => {
             setShowAuthModal(false);
-            if (authReason === "book") setShowPrompt(false);
+            if (authReason === "book") {
+              setShowPrompt(false);
+            }
           }}
         />
       )}
 
-      {/* HEADER NAVBAR */}
+      {/* HEADER NAVBAR - Hides automatically on mobile landscape mode to maximize screen space! */}
       <div
-        className="flex justify-between items-center px-4 md:px-10 py-3 md:py-6 border-b shrink-0"
+        className="flex justify-between items-center px-4 md:px-10 py-3 md:py-6 border-b shrink-0 landscape:max-md:hidden portrait:flex transition-all"
         style={{ borderColor: currentTheme.tocBg }}
       >
         <div className="flex flex-col min-w-0 mr-4">
@@ -123,7 +128,7 @@ export default function ReadingRoom({
         </div>
         <button
           onClick={handleCloseRequest}
-          className="shrink-0 text-xs md:text-sm px-5 py-2 md:px-8 md:py-3 rounded-full border border-current opacity-60 hover:opacity-100 transition-all hover:bg-black/5 dark:hover:bg-white/5"
+          className="shrink-0 text-xs md:text-sm px-5 py-2 md:px-8 md:py-3 rounded-full border border-current opacity-60 hover:opacity-100 transition-all hover:bg-black/5 dark:hover:bg-white/5 font-semibold"
         >
           Close Book
         </button>
@@ -161,9 +166,7 @@ export default function ReadingRoom({
                 manager: "continuous",
                 flow: "scrolled",
                 allowScriptedContent: true,
-                // to help toc snap to exact chapter start
                 snap: true,
-                restore: true,
               }}
               getRendition={(rendition) => {
                 rendition.themes.default({
@@ -172,11 +175,12 @@ export default function ReadingRoom({
                     color: `${currentTheme.epubText} !important`,
                     "font-family":
                       '"Georgia", "Times New Roman", serif !important',
-                    "font-size": "clamp(8px, 2.5vw, 22px) !important",
-                    "line-height": "1.7 !important",
-                    // THE NEW PADDING LOGIC
-                    padding: "0 2px !important",
-                    margin: "0 !important",
+                    // Responsive text: smaller on mobile (12px), larger on desktop (20px)
+                    "font-size": "clamp(12px, 4vw, 20px) !important",
+                    // Tighter line height for mobile reading
+                    "line-height": "1.4 !important",
+                    // Responsive padding: Tiny margins on mobile (10px), comfortable on desktop (5%)
+                    padding: "20px clamp(10px, 3vw, 5%) !important",
                     "box-sizing": "border-box !important",
                     "max-width": "100% !important",
                     "overflow-x": "hidden !important",
@@ -184,7 +188,7 @@ export default function ReadingRoom({
                     "scrollbar-color": `${currentTheme.scrollbarThumb} ${currentTheme.scrollbarTrack}`,
                   },
                   "::-webkit-scrollbar": {
-                    width: "8px !important",
+                    width: "6px !important",
                   },
                   "::-webkit-scrollbar-track": {
                     background: `${currentTheme.scrollbarTrack} !important`,
@@ -196,6 +200,7 @@ export default function ReadingRoom({
                   "h1, h2, h3, h4, h5, h6": {
                     color: `${currentTheme.epubText} !important`,
                     "word-wrap": "break-word !important",
+                    "margin-top": "0 !important", // Helps prevent chapters snapping to the bottom
                   },
                   "p, div, span": {
                     "word-wrap": "break-word !important",
@@ -212,8 +217,6 @@ export default function ReadingRoom({
                   ...ReactReaderStyle.readerArea,
                   backgroundColor: currentTheme.hexBg,
                   transition: "all 0.3s ease",
-                  // THE NEW PADDING LOGIC
-                  padding: "0 !important",
                 },
                 titleArea: { display: "none" },
                 arrow: { display: "none" },
@@ -223,11 +226,11 @@ export default function ReadingRoom({
                   opacity: 0.6,
                 },
 
-                // --- TOC (LEFT NAVBAR) - YOUR WORKING OLD LOGIC ---
+                // --- TOC (LEFT NAVBAR) ---
                 tocButton: {
                   ...ReactReaderStyle.tocButton,
                   color: currentTheme.epubText,
-                  margin: "12px",
+                  margin: "8px", // Smaller footprint on mobile
                   opacity: 0.8,
                   zIndex: 101,
                 },
@@ -243,8 +246,9 @@ export default function ReadingRoom({
                   ...ReactReaderStyle.tocArea,
                   backgroundColor: currentTheme.tocBg,
                   color: currentTheme.epubText,
-                  width: "85vw",
-                  maxWidth: "350px",
+                  padding: "50px 0px 20px 0px", // Reduced top padding
+                  width: "80vw", // Slightly narrower on mobile
+                  maxWidth: "320px",
                   boxShadow: "4px 0 25px rgba(0,0,0,0.5)",
                 },
                 tocAreaButton: {
@@ -252,8 +256,9 @@ export default function ReadingRoom({
                   color: currentTheme.epubText,
                   whiteSpace: "normal",
                   wordWrap: "break-word",
-                  lineHeight: "1.2",
-                  padding: "16px 0px 16px 5px",
+                  lineHeight: "1.4",
+                  fontSize: "12px", // Smaller text for long chapter names
+                  padding: "12px 16px", // Reduced padding for compactness
                   borderBottom: `1px solid ${currentTheme.epubText}20`,
                   textAlign: "left",
                   width: "100%",
