@@ -67,38 +67,6 @@ This keeps the project **within free MongoDB limits** while still delivering a r
 * MongoDB (minimal storage)
 * Gutendex API integration
 
----
-
-## 📷 Screenshots
-
-*Add your UI screenshots here*
-
-* Home page (mood selection)
-* Era exploration
-* Book listing
-* Reader screen
-
----
-
-## 📂 Folder Structure (important)
-
-```
-/client
-  /components
-  /pages
-  /reader
-  /styles
-
-/server
-  /controllers
-  /routes
-  /services (gutendex fetch logic)
-  /data (mood & era mapping JSON)
-  /models (bookmarks, progress)
-```
-
----
-
 ## ⚙️ What is stored in Database?
 
 Only:
@@ -150,17 +118,6 @@ PORT=5000
 * Books provided by **Project Gutenberg** (Public Domain)
 
 This project uses only public domain books and does not host any copyrighted content.
-
----
-
-## 🎯 Future Improvements
-
-* Reading statistics dashboard
-* Personalized recommendations
-* Book roulette
-* Notes & highlights
-
----
 
 ## 💡 Learning Goals of this Project
 
